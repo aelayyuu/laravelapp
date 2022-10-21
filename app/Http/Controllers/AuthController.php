@@ -13,13 +13,15 @@ class AuthController extends Controller
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|regex:/\w*$/|max:255|unique:users,username',
+            'phone_number' => 'required|numeric|digits:11',
             'password' => 'required|string|min:8',
         ]);
 
         $user = User::create([
             'name' => $validatedData['name'],
-            'email' => $validatedData['email'],
+            'username' => $validatedData['username'],
+            'phone_number' => $validatedData['phone_number'],
             'password' => Hash::make($validatedData['password']),
         ]);
 
@@ -32,13 +34,13 @@ class AuthController extends Controller
     }
     public function login(Request $request)
     {
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        if (!Auth::attempt($request->only('username', 'password'))) {
             return response()->json([
                 'message' => 'Invalid login details'
             ], 401);
         }
 
-        $user = User::where('email', $request['email'])->firstOrFail();
+        $user = User::where('username', $request['username'])->firstOrFail();
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
